@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>ProxyForge Tagger</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; }
+      label { display: block; margin: 1rem 0 0.25rem; font-weight: 600; }
+      input { width: 100%; padding: 0.5rem; box-sizing: border-box; }
+      button { margin-top: 1.5rem; padding: 0.5rem 1.5rem; }
+      .ok { color: #059669; margin-left: 1rem; }
+    </style>
+  </head>
+  <body>
+    <h1>ProxyForge Tagger</h1>
+    <label for="token">API token</label>
+    <input id="token" type="password" placeholder="proxyforge token" />
+    <label for="apiBase">API base</label>
+    <input id="apiBase" type="text" placeholder="http://127.0.0.1:8765" />
+    <label for="minutes">Tag duration (minutes)</label>
+    <input id="minutes" type="number" min="1" max="240" value="10" />
+    <button id="save">Save</button>
+    <span id="status" class="ok"></span>
+    <script src="options.js"></script>
+  </body>
+</html>

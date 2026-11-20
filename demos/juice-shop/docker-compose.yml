@@ -1,0 +1,6 @@
+services:
+  juice-shop:
+    image: bkimminich/juice-shop:latest
+    ports:
+      - "127.0.0.1:30100:3000"
+    restart: unless-stopped

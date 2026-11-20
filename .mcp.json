@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "proxyforge": {
+      "command": "/absolute/path/to/proxyforge",
+      "args": ["mcp"],
+      "env": {
+        "PROXYFORGE_API": "http://127.0.0.1:8765"
+      }
+    }
+  }
+}

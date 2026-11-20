@@ -1,0 +1,4 @@
+-- M2: MITM metadata
+ALTER TABLE flows ADD COLUMN tunnel INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE flows ADD COLUMN tls_client TEXT;
+ALTER TABLE flows ADD COLUMN tls_server TEXT;

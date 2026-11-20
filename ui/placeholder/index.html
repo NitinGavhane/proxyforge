@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- pf-ui-placeholder -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ProxyForge</title>
+    <style>
+      body { font-family: ui-monospace, monospace; background: #0b0e14; color: #9aa4b2;
+             display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+      .box { max-width: 32rem; padding: 2rem; border: 1px solid #1f2733; border-radius: 8px; }
+      code { color: #7dd3fc; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>ProxyForge UI is not built</h1>
+      <p>This binary was compiled without the built web app.</p>
+      <p>Build it with:</p>
+      <pre><code>cd ui &amp;&amp; npm ci &amp;&amp; npm run build
+cd .. &amp;&amp; go build ./cmd/proxyforge</code></pre>
+      <p>The REST API on <code>/api/v1/*</code> is fully functional.</p>
+    </div>
+  </body>
+</html>

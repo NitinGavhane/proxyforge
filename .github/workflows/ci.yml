@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+          check-latest: true
+      - name: Ensure UI placeholder only (dist must not be committed)
+        run: |
+          if [ -f ui/dist/index.html ] && ! grep -q pf-ui-placeholder ui/dist/index.html 2>/dev/null; then
+            if git ls-files --error-unmatch ui/dist/index.html >/dev/null 2>&1; then
+              echo "built UI committed — ui/dist/* must stay gitignored"; exit 1
+            fi
+          fi
+      - name: Format + vet + test
+        run: |
+          gofmt -l . | tee /tmp/fmt.txt
+          test ! -s /tmp/fmt.txt
+          go vet ./...
+          go test -race ./...
+      - name: Build binaries
+        run: |
+          go build ./cmd/proxyforge
+
+  ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm ci
+      - run: npm run build
+      - run: npm test -- --passWithNoTests
+
+  demo:
+    # Full scripted demo against OWASP Juice Shop (docker) — the Phase 1
+    # definition of done: proxying, M&R, intercept-and-edit, scope, HAR.
+    runs-on: ubuntu-latest
+    needs: [go, ui]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Build UI then binary
+        run: |
+          (cd ui && npm ci && npm run build)
+          go build -o proxyforge ./cmd/proxyforge
+      - name: Run the Juice Shop demo
+        run: |
+          DEMO_HEADLESS=1 SKIP_REA=1 ./demos/run-demo.sh
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [go, ui]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Build UI then binary
+        run: |
+          (cd ui && npm ci && npm run build)
+          go build -o proxyforge ./cmd/proxyforge
+      - name: Smoke: proxy plain HTTP + API history
+        run: |
+          mkdir -p /tmp/pf-home && export HOME=/tmp/pf-home
+          ./proxyforge token >/dev/null   # create config before daemon (no race)
+          ./proxyforge -project /tmp/e2e.pf.sqlite -proxy-addr 127.0.0.1:18080 -api-addr 127.0.0.1:18765 &
+          sleep 2
+          TOKEN=$(./proxyforge token)
+          # upstream target
+          python3 -m http.server 19001 --bind 127.0.0.1 >/dev/null 2>&1 &
+          sleep 1
+          # send traffic through the proxy
+          curl -sS -x http://127.0.0.1:18080 http://127.0.0.1:19001/ >/dev/null
+          curl -sS -x http://127.0.0.1:18080 http://127.0.0.1:19001/nonexistent >/dev/null
+          sleep 1
+          # assert history via API
+          curl -sS -H "Authorization: Bearer $TOKEN" http://127.0.0.1:18765/api/v1/flows > /tmp/flows.json
+          cat /tmp/flows.json
+          grep -q '"method":"GET"' /tmp/flows.json
+          grep -q '"status":404' /tmp/flows.json
+          grep -q '"status":200' /tmp/flows.json
+
+  playwright:
+    # UI smoke in a real browser: token gate, history render, intercept
+    # park + forward through the UI.
+    runs-on: ubuntu-latest
+    needs: [go, ui]
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Build binary and run the smoke
+        run: |
+          (cd .. && go build -o proxyforge ./cmd/proxyforge)
+          node e2e/smoke.mjs ../proxyforge /tmp/pf-playwright

@@ -1,0 +1,21 @@
+# Go
+/proxyforge
+/bin/
+*.test
+*.out
+
+# UI
+ui/node_modules/
+ui/dist/*
+!ui/dist/.gitkeep
+ui/.vite/
+
+# Projects / engagement data
+*.pf.sqlite
+*.pf.sqlite-wal
+*.pf.sqlite-shm
+/projects/
+
+# Local artifacts
+.DS_Store
+coverage*
