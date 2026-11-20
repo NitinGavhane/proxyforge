@@ -33,7 +33,7 @@ local web UI, and an MCP server for Claude Code.
 Requirements to build: **Go 1.27+** and **Node 20+** (for the UI build).
 
 ```bash
-git clone <this repo> proxyforge && cd proxyforge
+git clone https://github.com/NitinGavhane/proxyforge.git && cd proxyforge
 
 # build the UI once, then the binary (the UI is embedded in it)
 (cd ui && npm ci && npm run build)
